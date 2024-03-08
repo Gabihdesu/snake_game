@@ -3,158 +3,157 @@ from pygame.locals import *
 from sys import exit  # fechar janela
 from random import randint
 
-pygame.init()
 
-pygame.mixer.music.set_volume(0.3)
-music_fundo = pygame.mixer_music.load('smw_course_clear.wav')
-#pygame.mixer_music.play(-1)  # -1 signifca que vai tocar repetidamente
-music_colisao = pygame.mixer.Sound('smw_coin.wav')
+class SnakeGame():
+    def __init__(self):
+        pygame.init()
+        # criar objeto tela
+        pygame.display.set_caption('Snack game')
+        self.largura = 640
+        self.altura = 480
+        # posicao do objeto
+        self.x_cobra = int(self.largura/2)
+        self.y_cobra = int(self.altura/2)
 
+        self.velocidade = 10
+        self.x_controle = self.velocidade
+        self.y_controle = 0
 
-# criar objeto tela
+        self.x_maca = randint(40, 600)
+        self.y_maca = randint(50, 430)
 
-largura = 640
-altura = 480
-# posicao do objeto
-x_cobra = int(largura/2)
-y_cobra = int(altura/2)
+        self.lista_cobra = []
+        self.comprimento_cobra = 5
 
-velocidade = 10
-x_controle = velocidade
-y_controle = 0
+        self.fonte = pygame.font.SysFont('arial', 40, True, True)
+        self.tela = pygame.display.set_mode((self.largura, self.altura))
+        self.relogio = pygame.time.Clock()
 
-x_maca = randint(40, 600)
-y_maca = randint(50, 430)
+        self.pontos = 0
+        self.morreu = False
+        self.Jogo()
 
-lista_cobra = []
-comprimento_cobra = 5
+    def aumenta_cobra(self, lista):
+        for XeY in lista:
+            #XeY = [x, y]
+            #XeY[0] = x
+            #XeY[1] = y
+            pygame.draw.rect(self.tela, (0,255,0), (XeY[0], XeY[1], 20, 20))
 
-fonte = pygame.font.SysFont('arial', 40, True, True)
-tela = pygame.display.set_mode((largura, altura))
-pygame.display.set_caption('Snack game')
-relogio = pygame.time.Clock()
+    def reiniciar_jogo(self):
+        self.pontos = 0
+        self.comprimento_cobra = 5
+        self.x_cobra = int(self.largura / 2)
+        self.y_cobra = int(self.altura / 2)
+        self.lista_cobra = []
+        self.lista_cabeca = []
+        self.x_maca = randint(40, 600)
+        self.y_maca = randint(50, 430)
+        self.morreu = False
 
-pontos = 0
-morreu = False
+    def Jogo(self):
+        pygame.mixer.music.set_volume(0.3)
+        self.music_fundo = pygame.mixer.music.load('smw_course_clear.wav')  # Fix this line
+        pygame.mixer.music.play(-1)  # -1 signifies that it will play repeatedly
+        self.music_colisao = pygame.mixer.Sound('smw_coin.wav')
 
+        while True:
+            self.relogio.tick(30)
+            self.tela.fill((255, 255, 255))
 
-def aumenta_cobra(lista):
-    for XeY in lista:
-        #XeY = [x, y]
-        #XeY[0] = x
-        #XeY[1] = y
+            mensagem = f'Pontos: {self.pontos}'
+            texto = self.fonte.render(mensagem, False, (0, 0, 0))
 
-        pygame.draw.rect(tela, (0,255,0), (XeY[0], XeY[1], 20, 20))
-
-def reiniciar_jogo():
-    global pontos, comprimento_cobra, x_cobra, y_cobra, lista_cobra, lista_cabeca, x_maca, y_maca, morreu
-    pontos = 0
-    comprimento_cobra = 5
-    x_cobra = int(largura / 2)
-    y_cobra = int(altura / 2)
-    lista_cobra = []
-    lista_cabeca = []
-    x_maca = randint(40, 600)
-    y_maca = randint(50, 430)
-    morreu = False
-
-
-while True:
-    relogio.tick(30)
-    tela.fill((255, 255, 255))
-
-    mensagem = f'Pontos: {pontos}'
-    texto = fonte.render(mensagem, False, (0, 0, 0))
-
-    # condição para fechar o jogo
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            exit()
-
-        if event.type == KEYDOWN:
-            if event.key == K_a:
-                if x_controle == velocidade:
-                    pass
-                else:
-                    x_controle = -velocidade
-                    y_controle = 0
-            if event.key == K_d:
-                if x_controle == -velocidade:
-                    pass
-                else:
-                    x_controle = velocidade
-                    y_controle = 0
-            if event.key == K_w:
-                if y_controle == velocidade:
-                    pass
-                else:
-                    y_controle = -velocidade
-                    x_controle = 0
-            if event.key == K_s:
-                if y_controle == -velocidade:
-                    pass
-                else:
-                    y_controle = velocidade
-                    x_controle = 0
-
-    x_cobra += x_controle
-    y_cobra += y_controle
-
-    # criar movimento nos objetos
-    cobra = pygame.draw.rect(tela, (0, 255, 0), (x_cobra, y_cobra, 20, 20))
-    maca = pygame.draw.rect(tela, (255, 0, 0), (x_maca, y_maca, 20, 20))
-
-    # quando colidir com a maçã
-    if cobra.colliderect(maca):
-        x_maca = randint(40, 600)
-        y_maca = randint(50, 430)
-        pontos += 1
-        music_colisao.play()
-        comprimento_cobra += 1
-
-    lista_cabeca = []
-
-    lista_cabeca.append(x_cobra)
-    lista_cabeca.append(y_cobra)
-    lista_cobra.append(lista_cabeca)
-
-    if lista_cobra.count(lista_cabeca) > 1:
-        fonte2 = pygame.font.SysFont('arial', 20, True, True)
-        perdeu_msg = 'Game over ! Pressione a tecla R para reiniciar o jogo'
-        texto_perdeu = fonte2.render(perdeu_msg, True, (0, 0, 0) )
-        rect_texto = texto_perdeu.get_rect()
-
-        morreu = True
-        while morreu:
-            tela.fill((255,255,255))
+            # condição para fechar o jogo
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
                     exit()
+
                 if event.type == KEYDOWN:
-                    if event.key == K_r:
-                        reiniciar_jogo()
-            rect_texto.center = (largura//2, altura//2)
-            tela.blit(texto_perdeu, rect_texto) # // divisão retorn inteiro
-            pygame.display.update()
+                    if event.key == K_a:
+                        if self.x_controle == self.velocidade:
+                            pass
+                        else:
+                            self.x_controle = -self.velocidade
+                            self.y_controle = 0
+                    if event.key == K_d:
+                        if self.x_controle == -self.velocidade:
+                            pass
+                        else:
+                            self.x_controle = self.velocidade
+                            self.y_controle = 0
+                    if event.key == K_w:
+                        if self.y_controle == self.velocidade:
+                            pass
+                        else:
+                            self.y_controle = -self.velocidade
+                            self.x_controle = 0
+                    if event.key == K_s:
+                        if self.y_controle == -self.velocidade:
+                            pass
+                        else:
+                            self.y_controle = self.velocidade
+                            self.x_controle = 0
 
-    if x_cobra > largura:
-        x_cobra = 0
-    if x_cobra < 0:
-        x_cobra = largura
-    if y_cobra < 0:
-        y_cobra = altura
-    if y_cobra > altura:
-        y_cobra = 0
+            self.x_cobra += self.x_controle
+            self.y_cobra += self.y_controle
 
-    if len(lista_cobra) > comprimento_cobra:
-        del lista_cobra[0]
+            # criar movimento nos objetos
+            cobra = pygame.draw.rect(self.tela, (0, 255, 0), (self.x_cobra, self.y_cobra, 20, 20))
+            maca = pygame.draw.rect(self.tela, (255, 0, 0), (self.x_maca, self.y_maca, 20, 20))
 
-    aumenta_cobra(lista_cobra)
+            # quando colidir com a maçã
+            if cobra.colliderect(maca):
+                self.x_maca = randint(40, 600)
+                self.y_maca = randint(50, 430)
+                self.pontos += 1
+                self.music_colisao.play()
+                self.comprimento_cobra += 1
 
-    tela.blit(texto, (450, 40))
-    pygame.display.update()  # a cada iteração atualiza a tela do jogo
+            lista_cabeca = []
+
+            lista_cabeca.append(self.x_cobra)
+            lista_cabeca.append(self.y_cobra)
+            self.lista_cobra.append(lista_cabeca)
+
+            if self.lista_cobra.count(lista_cabeca) > 1:
+                fonte2 = pygame.font.SysFont('arial', 20, True, True)
+                perdeu_msg = 'Game over ! Pressione a tecla R para reiniciar o jogo'
+                texto_perdeu = fonte2.render(perdeu_msg, True, (0, 0, 0) )
+                rect_texto = texto_perdeu.get_rect()
+
+                self.morreu = True
+                while self.morreu:
+                    self.tela.fill((255,255,255))
+                    for event in pygame.event.get():
+                        if event.type == QUIT:
+                            pygame.quit()
+                            exit()
+                        if event.type == KEYDOWN:
+                            if event.key == K_r:
+                                self.reiniciar_jogo()
+                    rect_texto.center = (self.largura//2, self.altura//2)
+                    self.tela.blit(texto_perdeu, rect_texto) # // divisão retorn inteiro
+                    pygame.display.update()
+
+            if self.x_cobra > self.largura:
+                self.x_cobra = 0
+            if self.x_cobra < 0:
+                self.x_cobra = self.largura
+            if self.y_cobra < 0:
+                self.y_cobra = self.altura
+            if self.y_cobra > self.altura:
+                self.y_cobra = 0
+
+            if len(self.lista_cobra) > self.comprimento_cobra:
+                del self.lista_cobra[0]
+
+            self.aumenta_cobra(self.lista_cobra)
+
+            self.tela.blit(texto, (450, 40))
+            pygame.display.update()  # a cada iteração atualiza a tela do jogo
 
 
-
+if __name__ == '__main__':
+    SnakeGame()
